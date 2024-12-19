@@ -33,18 +33,22 @@ app.get("/api/reservations", async (req, res) => {
     }
   });
 // Create reservation
-app.post('/api/reservations', async (req, res) => {
+app.post("/api/reservations", async (req, res) => {
     const { date, partyCount, customerId, restaurantId } = req.body;
-    const query = `
-      INSERT INTO reservations (date, partyCount, customerId, restaurantId)
-      VALUES ($1, $2, $3, $4) RETURNING *`;
-    const values = [date, partyCount, customerId, restaurantId];
   
     try {
-      const result = await pool.query(query, values);
-      res.status(201).json(result.rows[0]);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
+      const reservation = await prisma.reservation.create({
+        data: {
+          date: new Date(date), 
+          partyCount: parseInt(partyCount), 
+          customer: { connect: { id: parseInt(customerId) } }, 
+          restaurant: { connect: { id: parseInt(restaurantId) } }, 
+        },
+      });
+      res.status(201).json(reservation);
+    } catch (error) {
+      console.error("Error creating reservation:", error);
+      res.status(400).json({ error: error.message });
     }
   });
 // Delete
