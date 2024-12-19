@@ -3,6 +3,7 @@ const morgan = require("morgan");
 const prisma = require("./prisma");
 const pg = require("pg");
 const app = express();
+const pool = require('./data');
 
 app.use(express.json());
 app.use(morgan("dev"));
@@ -21,12 +22,16 @@ app.get("/api/restaurants", async (req, res) => {
 
 // all reservations
 app.get("/api/reservations", async (req, res) => {
-  const reservations = await prisma.reservation.findMany({
-    include: { customer: true, restaurant: true },
+    try {
+      const reservations = await prisma.reservation.findMany({
+        include: { customer: true, restaurant: true },
+      });
+      res.json(reservations);
+    } catch (error) {
+      console.error("Error fetching reservations:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   });
-  res.json(reservations);
-});
-
 // Create reservation
 app.post('/api/reservations', async (req, res) => {
     const { date, partyCount, customerId, restaurantId } = req.body;

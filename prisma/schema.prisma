@@ -26,11 +26,11 @@ model Restaurant {
 }
 
 model Reservation {
-  id         Int        @id @default(autoincrement())
-  date       DateTime
-  partyCount Int
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  customerId Int
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  id           Int        @id @default(autoincrement())
+  date         DateTime
+  partyCount   Int
+  customer     Customer   @relation(fields: [customerId], references: [id])
+  customerId   Int
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
   restaurantId Int
 }
