@@ -1,8 +1,9 @@
 const express = require("express");
 const morgan = require("morgan");
 const prisma = require("./prisma");
-
+const pg = require("pg");
 const app = express();
+
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -26,26 +27,21 @@ app.get("/api/reservations", async (req, res) => {
   res.json(reservations);
 });
 
-// Create
-app.post("/api/customers/:id/reservations", async (req, res) => {
-  const { id } = req.params;
-  const { restaurantId, date, partyCount } = req.body;
-
-  try {
-    const reservation = await prisma.reservation.create({
-      data: {
-        date: new Date(date),
-        partyCount,
-        customerId: parseInt(id),
-        restaurantId: parseInt(restaurantId),
-      },
-    });
-    res.status(201).json(reservation);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
+// Create reservation
+app.post('/api/reservations', async (req, res) => {
+    const { date, partyCount, customerId, restaurantId } = req.body;
+    const query = `
+      INSERT INTO reservations (date, partyCount, customerId, restaurantId)
+      VALUES ($1, $2, $3, $4) RETURNING *`;
+    const values = [date, partyCount, customerId, restaurantId];
+  
+    try {
+      const result = await pool.query(query, values);
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
 // Delete
 app.delete(
   "/api/customers/:customerId/reservations/:id",
@@ -62,6 +58,34 @@ app.delete(
     }
   }
 );
+// create new restaurant
+app.post('/api/restaurants', async (req, res) => {
+    const { name } = req.body;
+    const query = 'INSERT INTO restaurants (name) VALUES ($1) RETURNING *';
+    const values = [name];
+  
+    try {
+      const result = await pool.query(query, values);
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+//   create customer
+  app.post('/api/customers', async (req, res) => {
+    const { name } = req.body;
+    const query = 'INSERT INTO customers (name) VALUES ($1) RETURNING *';
+    const values = [name];
+  
+    try {
+      const result = await pool.query(query, values);
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+  
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
